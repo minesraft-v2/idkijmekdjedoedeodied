@@ -1,0 +1,45 @@
+# Site settings
+title: "EXT-REMOVER'S"
+description: "A collection of all web development coding languages"
+baseurl: "" # Change to /repo-name if deploying to a project page
+url: "https://yourusername.github.io"
+
+# Build settings
+theme: minima # or remove for custom theme
+markdown: kramdown
+highlighter: rouge
+
+# Collections (for organizing your files)
+collections:
+  tools:
+    output: true
+    permalink: /:collection/:name/
+
+# Include these file types
+include:
+  - "_pages"
+  - ".nojekyll" # if you have raw HTML files
+
+# Exclude files from processing
+exclude:
+  - "config-64.py"
+  - "*.py"
+  - "Gemfile"
+  - "Gemfile.lock"
+  - "README.md"
+  - "node_modules"
+  - ".gitignore"
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+# Default layouts
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "default"
