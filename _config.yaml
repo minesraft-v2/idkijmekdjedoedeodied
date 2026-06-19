@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: https-proxy
+  labels:
+    app: https-proxy
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: https-proxy
+  template:
+    metadata:
+      labels:
+        app: https-proxy
+    spec:
+      containers:
+      - name: proxy
+        image: nginx:alpine
+        ports:
+        - containerPort: 3128
+        volumeMounts:
+        - name: config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        - name: certs
+          mountPath: /etc/nginx/certs
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: proxy-config
+      - name: certs
+        secret:
+          secretName: proxy-certs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: https-proxy
+spec:
+  selector:
+    app: https-proxy
+  ports:
+  - port: 3128
+    targetPort: 3128
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: proxy-config
+data:
+  nginx.conf: |
+    worker_processes auto;
+    events { worker_connections 1024; }
+    http {
+      server {
+        listen 3128;
+        location / {
+          proxy_pass $scheme://$host$request_uri;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_ssl_server_name on;
+        }
+      }
+    }
