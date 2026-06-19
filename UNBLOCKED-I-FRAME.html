@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Proxy Iframe Loader</title>
+    <style>
+        body { margin: 0; font-family: sans-serif; }
+        #urlInput { width: 300px; padding: 8px; }
+        #loadBtn { padding: 8px 16px; }
+        #frameContainer { 
+            width: 100%; 
+            height: 90vh; 
+            border: none; 
+            margin-top: 10px;
+        }
+        iframe { width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body>
+    <input type="text" id="urlInput" placeholder="Enter URL to load..." />
+    <button id="loadBtn">Load</button>
+    <div id="frameContainer"></div>
+
+    <script>
+        // Method 1: Using a CORS proxy service
+        function loadWithProxy(url) {
+            const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+            const container = document.getElementById('frameContainer');
+            container.innerHTML = `<iframe src="${proxyUrl}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>`;
+        }
+
+        // Method 2: Fetch and inject (bypasses some restrictions)
+        async loadWithFetch(url) {
+            try {
+                const response = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+                const html = await response.text();
+                
+                const blob = new Blob([html], { type: 'text/html' });
+                const blobUrl = URL.createObjectURL(blob);
+                
+                const container = document.getElementById('frameContainer');
+                container.innerHTML = `<iframe src="${blobUrl}" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>`;
+            } catch (e) {
+                console.error('Fetch failed:', e);
+                // Fallback to proxy method
+                loadWithProxy(url);
+            }
+        }
+
+        // Method 3: Base64 data URI (for simple content)
+        function loadAsDataURI(htmlContent) {
+            const base64 = btoa(unescape(encodeURIComponent(htmlContent)));
+            const dataUri = 'data:text/html;base64,' + base64;
+            document.getElementById('frameContainer').innerHTML = 
+                `<iframe src="${dataUri}" sandbox="allow-scripts"></iframe>`;
+        }
+
+        document.getElementById('loadBtn').addEventListener('click', () => {
+            const url = document.getElementById('urlInput').value;
+            if (url) loadWithProxy(url);
+        });
+
+        // Enter key support
+        document.getElementById('urlInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const url = document.getElementById('urlInput').value;
+                if (url) loadWithProxy(url);
+            }
+        });
+    </script>
+</body>
+</html>
